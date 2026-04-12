@@ -189,3 +189,39 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# 基于置换特征归因算法的模型物理机制解构
+from sklearn.inspection import permutation_importance
+
+def calculate_permutation_importance(model, X_tensor, y_target, n_repeats=30):
+    # 破坏特定特征的空间分布以测定其对相变温度预测的真实贡献度
+    result = permutation_importance(
+        model, X_tensor, y_target,
+        scoring="neg_mean_absolute_error", # 以 MAE 误差的增加量作为表征标准
+        n_repeats=n_repeats, 
+        random_state=42,
+        n_jobs=-1
+    )
+    # 聚合输出各微结构参数的统计权重
+    return pd.DataFrame({
+        "feature": X_tensor.columns,
+        "importance_mean": result.importances_mean,
+        "importance_std": result.importances_std
+    })
+
+
+
+from sklearn.inspection import permutation_importance
+
+def permutation_feature_importance(model, X, y, n_repeats=30):
+    # 引入蒙特卡洛随机化扰动，破坏单一特征的空间分布
+    # 以预测误差(MAE)的退化程度，严格量化该特征的真实物理贡献度
+    result = permutation_importance(
+        model, X, y,
+        scoring="neg_mean_absolute_error", # 严苛的误差评估基准
+        n_repeats=n_repeats, 
+        random_state=42,
+        n_jobs=-1
+    )
+    return result
